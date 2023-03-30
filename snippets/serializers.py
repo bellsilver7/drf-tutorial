@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
 
@@ -6,6 +7,7 @@ class SnippetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Snippet
         fields = ['id', 'title', 'code', 'linenos', 'language', 'style']
+
 
 # class SnippetSerializer(serializers.Serializer):
 #     id = serializers.IntegerField(read_only=True)
@@ -32,3 +34,11 @@ class SnippetSerializer(serializers.ModelSerializer):
 #         instance.style = validated_data.get('style', instance.style)
 #         instance.save()
 #         return instance
+
+class UserSerializer(serializers.ModelSerializer):
+    snippets = serializers.PrimaryKeyRelatedField(many=True, queryset=Snippet.objects.all())
+    owner = serializers.ReadOnlyField(source='owner.username')
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'snippets', 'owner']
