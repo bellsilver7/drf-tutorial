@@ -1,4 +1,4 @@
-# Djang REST Framework 튜토리얼
+# 장고 REST 프레임워크 튜토리얼
 
 ## 목차
 
@@ -9,22 +9,22 @@
     - [mixin 사용하기](#mixin-사용하기)
     - [generic 클래스 기반 뷰 사용하기](#generic-클래스-기반-뷰-사용하기)
 - [튜토리얼 4: 인증 및 권한](#튜토리얼-4-인증-및-권한)
-  - [모델에 정보 추가하기](#모델에-정보-추가하기)
-  - [User 모델에 대한 엔드포인트 추가하기](#User-모델에-대한-엔드포인트-추가하기)
-  - [Users와 Snippets 연결하기](#Users와-Snippets-연결하기)
-  - [serializer 업데이트하기](#serializer-업데이트하기)
-  - [뷰에 필요한 권한 추가하기](#뷰에-필요한-권한-추가하기)
-  - [Browsable API에 로그인 추가하기](#Browsable-API에-로그인-추가하기)
-  - [개체 수준 권한](#개체-수준-권한)
-  - [API로 인증하기](#API로-인증하기)
-  - [요약](#요약)
+    - [모델에 정보 추가하기](#모델에-정보-추가하기)
+    - [User 모델에 대한 엔드포인트 추가하기](#User-모델에-대한-엔드포인트-추가하기)
+    - [Users와 Snippets 연결하기](#Users와-Snippets-연결하기)
+    - [serializer 업데이트하기](#serializer-업데이트하기)
+    - [뷰에 필요한 권한 추가하기](#뷰에-필요한-권한-추가하기)
+    - [Browsable API에 로그인 추가하기](#Browsable-API에-로그인-추가하기)
+    - [개체 수준 권한](#개체-수준-권한)
+    - [API로 인증하기](#API로-인증하기)
+    - [요약](#요약)
 - [튜토리얼 5: 관계 및 하이퍼링크 API](#튜토리얼-5-관계-및-하이퍼링크-API)
-  - [API 루트의 엔드포인트 만들기](#API-루트의-엔드포인트-만들기)
-  - [강조 표시된 snippets 엔드포인트 만들기](#강조-표시된-snippets-엔드포인트-만들기)
-  - [API 하이퍼링크](#API-하이퍼링크)
-  - [URL 패턴의 이름 지정하기](#URL-패턴의-이름-지정하기)
-  - [페이지네이션 추가](#페이지네이션-추가)
-  - [API 탐색하기](#API-탐색하기)
+    - [API 루트의 엔드포인트 만들기](#API-루트의-엔드포인트-만들기)
+    - [강조 표시된 snippets 엔드포인트 만들기](#강조-표시된-snippets-엔드포인트-만들기)
+    - [API 하이퍼링크](#API-하이퍼링크)
+    - [URL 패턴의 이름 지정하기](#URL-패턴의-이름-지정하기)
+    - [페이지네이션 추가](#페이지네이션-추가)
+    - [API 탐색하기](#API-탐색하기)
 - [튜토리얼 6: 뷰셋 및 라우터](#튜토리얼-6-뷰셋-및-라우터)
 
 ## 튜토리얼 1: Serialization
@@ -476,7 +476,8 @@ http -a admin:password123 POST http://127.0.0.1:8000/snippets/ code="print(789)"
 ### API 루트의 엔드포인트 만들기
 
 현재 'snippets'와 'users'에 대한 엔드포인트를 가지고 있지만, API에 대한 단일 진입점이 없다.
-하나를 만들기 위해, 일반 함수 기반 view와 이전에 소개한 @api_view 데코레이터를 사용할 것이다.
+이를 위해, based-function view와 이전에 소개한 @api_view 데코레이터를 사용할 것이다.
+
 snippets/views.py에 추가한다:
 
 ```python
@@ -494,22 +495,21 @@ def api_root(request, format=None):
 ```
 
 여기서 주목할 할 두 가지.
-첫째, 정규화된 URL을 반환하기 위해 REST 프레임워크의 reverse 함수 사용.
-둘째, URL 패턴은 나중에 snippets/urls.py에서 선언할 편의 이름으로 식별.
+
+- 첫째, 정규화된 URL을 반환하기 위해 REST 프레임워크의 reverse 함수 사용.
+- 둘째, URL 패턴은 나중에 snippets/urls.py에서 선언할 이름으로 식별.
 
 ### 강조 표시된 snippets 엔드포인트 만들기
 
-pastebin API에서 여전히 누락된 또 다른 명백한 것은 엔드포인트를 강조하는 코드이다.
+pastebin API에서 여전히 누락된 것은 엔드포인트를 강조하는 코드다.
 
-다른 모든 API 엔드포인트와 달리, JSON을 사용하지 않고 대신 HTML 표현을 제시하고자 한다.
-REST 프레임워크에서 제공하는 두 가지 스타일의 HTML 렌더러가 있는데,
-하나는 템플릿을 사용하여 렌더링된 HTML을 다루기 위한 것이고, 다른 하나는 사전 렌더링된 HTML을 다루기 위한 것이다.
-두 번째 렌더러는 우리가 이 엔드포인트에 사용하고 싶은 것이다.
+다른 API 엔드포인트와 달리, JSON을 사용하지 않고 대신 HTML 표현을 제시하고자 한다. REST 프레임워크에서 제공하는 두 가지 스타일의 HTML 렌더러가 있는데, 하나는 템플릿을 사용하여 렌더링된
+HTML을 다루기 위한 것이고, 다른 하나는 사전 렌더링된 HTML을 다루기 위한 것이다. 두 번째 렌더러가 이 엔드포인트에 사용하고 싶은 것이다.
 
-코드 하이라이트 뷰를 만들 때 고려해야 할 또 다른 사항은 우리가 사용할 수 있는 기존의 구체적인 일반 뷰가 없다는 것이다.
-객체 인스턴스를 반환하는 것이 아니라 객체 인스턴스의 속성을 반환한다.
+코드 하이라이트 뷰를 만들 때 고려해야 할 또 다른 사항은 우리가 사용할 수 있는 기존의 구체적인 일반 뷰가 없다는 것이다. 객체 인스턴스를 반환하는 것이 아니라 객체 인스턴스의 속성을 반환한다.
 
-구체적인 일반 뷰를 사용하는 대신, 인스턴스를 나타내기 위해 기본 클래스를 사용하고, .get() 메소드를 만들 것이다.
+구체적인 일반 뷰를 사용하는 대신, 인스턴스를 표현하기 위해 기본 클래스를 사용하고, .get() 메소드를 만들 것이다.
+
 snippets/views.py에 추가:
 
 ```python
@@ -525,8 +525,9 @@ class SnippetHighlight(generics.GenericAPIView):
         return Response(snippet.highlighted)
 ```
 
-평소와 같이 우리는 URLconf에 만든 새로운 뷰를 추가해야 한다.
-snippets/urls.py에 새로운 API 루트의 URL 패턴을 추가:
+URLconf에 만든 새로운 뷰를 추가해야 한다.
+
+snippets/urls.py에 새로운 API 루트의 URL 패턴 추가:
 
 ```python
 path('', views.api_root),
@@ -541,6 +542,7 @@ path('snippets/<int:pk>/highlight/', views.SnippetHighlight.as_view()),
 ### API 하이퍼링크
 
 엔티티 간의 관계를 다루는 것은 웹 API 디자인의 더 어려운 측면 중 하나이다.
+
 관계를 표현하기 위해 선택할 수 있는 여러 가지 방법이 있다:
 
 - 기본키 사용.
@@ -550,21 +552,19 @@ path('snippets/<int:pk>/highlight/', views.SnippetHighlight.as_view()),
 - 부모 표현 안에 관련 엔티티 중첩.
 - 다른 사용자 지정 표현.
 
-REST 프레임워크는 이러한 모든 스타일을 지원하며, 순방향 또는 역방향 관계에 적용하거나 일반 외래 키와 같은 사용자 지정 관리자에 적용할 수 있다.
+REST 프레임워크는 이러한 모든 스타일을 지원하며, 순방향 또는 역방향 관계에 적용하거나 일반 외래키와 같은 사용자 지정 관리자에 적용할 수 있다.
 
-이 경우 엔티티 간에 하이퍼링크 스타일을 사용하고 싶습니다. 
-그렇게 하기 위해, 기존 ModelSerializer 대신 HyperlinkedModelSerializer를 확장하도록 시리얼라이저를 수정할
+이 경우 엔티티 간에 하이퍼링크 스타일을 사용하길 원한다. 그렇게 하기 위해, 기존 ModelSerializer 대신 HyperlinkedModelSerializer를 확장하도록 시리얼라이저를 수정할
 것이다.
 
 HyperlinkedModelSerializer는 ModelSerializer와 다음과 같은 차이점이 있다:
 
-기본적으로 id 필드는 포함되지 않는다.
+- 기본적으로 id 필드는 포함되지 않는다.
+- HyperlinkedIdentityField를 사용하는 URL 필드를 포함한다.
+- 관계는 PrimaryKeyRelatedField 대신 HyperlinkedRelatedField를 사용한다.
 
-HyperlinkedIdentityField를 사용하는 URL 필드를 포함한다.
+하이퍼링크를 사용하기 위해 기존 시리얼라이저를 쉽게 다시 작성할 수 있다.
 
-관계는 PrimaryKeyRelatedField 대신 HyperlinkedRelatedField를 사용한다.
-
-하이퍼링크를 사용하기 위해 기존 시리얼라이저를 쉽게 다시 작성할 수 있다. 
 snippets/serializers.py에 다음을 추가:
 
 ```python
@@ -586,8 +586,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['url', 'id', 'username', 'snippets']
 ```
 
-새로운 'highlight' 필드를 추가했다는 것을 주목한다. 
-이 필드는 'snippet-detail' URL 패턴 대신 'snippet-highlight' URL 패턴을 가리키는 것을 제외하고는 URL 필드와 같은 유형이다.
+새로운 'highlight' 필드를 추가했다는 것을 주목한다. 이 필드는 'snippet-detail' URL 패턴 대신 'snippet-highlight' URL 패턴을 가리키는 것을 제외하고는 URL 필드와 같은
+유형이다.
 
 '.json'과 같은 형식 접미사 URL을 포함했기 때문에, highlight 필드에 반환하는 형식 접미사 하이퍼링크가 '.html' 접미사를 사용해야 한다는 것을 표시해야 한다.
 
@@ -595,10 +595,10 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 하이퍼링크된 API를 사용하려면, URL 패턴의 이름을 지정해야 한다. 어떤 URL 패턴에 이름을 붙여야 하는지 살펴보자.
 
-- 우리 API의 루트는 'user-list'와 'snippet-list'을 의미한다. 
-- 우리의 스니펫 시리얼라이저는 'snippet-highlight'를 참조하는 필드를 포함한다. 
-- 사용자 시리얼라이저는 'snippet-detail'을 참조하는 필드를 포함한다. 
-- 우리의 스니펫과 사용자 시리얼라이저는 기본적으로 '{model_name}-detail'을 참조하는 'url' 필드를 포함하며, 이 경우 'snippet-detail'과 'user-detail'이 된다.
+- API의 루트는 'user-list'와 'snippet-list'을 의미한다.
+- snippet 시리얼라이저는 'snippet-highlight'를 참조하는 필드를 포함한다.
+- user 시리얼라이저는 'snippet-detail'을 참조하는 필드를 포함한다.
+- snippet과 user 시리얼라이저는 기본적으로 '{model_name}-detail'을 참조하는 'url' 필드를 포함하며, 이 경우 'snippet-detail'과 'user-detail'이 된다.
 
 URLconf에 모든 이름을 추가한 후, 최종 snippets/urls.py 파일은 다음과 같아야 한다:
 
@@ -610,30 +610,20 @@ from snippets import views
 # API endpoints
 urlpatterns = format_suffix_patterns([
     path('', views.api_root),
-    path('snippets/',
-        views.SnippetList.as_view(),
-        name='snippet-list'),
-    path('snippets/<int:pk>/',
-        views.SnippetDetail.as_view(),
-        name='snippet-detail'),
-    path('snippets/<int:pk>/highlight/',
-        views.SnippetHighlight.as_view(),
-        name='snippet-highlight'),
-    path('users/',
-        views.UserList.as_view(),
-        name='user-list'),
-    path('users/<int:pk>/',
-        views.UserDetail.as_view(),
-        name='user-detail')
+    path('snippets/', views.SnippetList.as_view(), name='snippet-list'),
+    path('snippets/<int:pk>/', views.SnippetDetail.as_view(), name='snippet-detail'),
+    path('snippets/<int:pk>/highlight/', views.SnippetHighlight.as_view(), name='snippet-highlight'),
+    path('users/', views.UserList.as_view(), name='user-list'),
+    path('users/<int:pk>/', views.UserDetail.as_view(), name='user-detail')
 ])
 ```
 
 ### 페이지네이션 추가
 
-사용자와 코드 스니펫에 대한 목록 보기는 꽤 많은 인스턴스를 반환할 수 있으므로, 결과를 페깅하고 API 클라이언트가 각 개별 페이지를 단계별로 진행할 수 있도록 하고 싶다.
+users와 코드 snippets에 대한 목록 view는 많은 인스턴스를 반환할 수 있으므로, 결과를 페이지화하고 API 클라이언트가 각 페이지를 단계별로 처리할 수 있도록 해야 한다.
 
-Tutorial/settings.py 파일을 약간 수정하여 페이지 매김을 사용하도록 기본 목록 스타일을 변경할 수 있다. 
-다음 설정을 추가한다:
+Tutorial/settings.py 파일을 약간 수정하여 페이지화를 사용하도록 기본 목록 스타일을 변경할 수 있다. 다음 설정을 추가한다:
+
 ```python
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
@@ -643,7 +633,7 @@ REST_FRAMEWORK = {
 
 REST 프레임워크의 설정은 모두 REST_FRAMEWORK라는 이름의 단일 사전 설정으로 네임스페이스되어 다른 프로젝트 설정과 잘 분리되는 데 도움이 된다.
 
-필요한 경우 페이지 매김 스타일을 사용자 정의할 수도 있지만, 이 경우 기본값을 고수할 것이다.
+필요한 경우 페이지네이션 스타일을 사용자 정의할 수도 있지만, 여기선 기본값을 사용한다.
 
 ### API 탐색하기
 
