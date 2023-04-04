@@ -643,4 +643,146 @@ REST 프레임워크의 설정은 모두 REST_FRAMEWORK라는 이름의 단일 �
 
 튜토리얼의 6부에서 우리는 API를 구축하는 데 필요한 코드의 양을 줄이기 위해 뷰셋과 라우터를 사용하는 방법을 살펴볼 것이다.
 
-## 튜토리얼 6: 뷰셋 및 라우터
+## 튜토리얼 6: ViewSets과 라우터
+
+REST 프레임워크에는 개발자가 API의 상태와 상호 작용을 모델링하는 데 집중하고 일반적인 규칙에 따라 URL 구성을 자동으로 처리할 수 있는 ViewSets를 다루기 위한 추상화가 포함되어 있다.
+
+ViewSet 클래스는 get 또는 put과 같은 메서드 핸들러가 아닌 retrieve 또는 update와 같은 작업을 제공한다는 점을 제외하고는 View 클래스와 거의 동일하다.
+
+ViewSet 클래스는 일반적으로 URL conf를 정의하는 복잡성을 처리하는 라우터 클래스를 사용하여 뷰 세트로 인스턴스화될 때 마지막 순간에만 메소드 핸들러 세트에 바인딩된다.
+
+### ViewSets를 사용하기 위한 리팩토링
+
+현재 view 설정을 가져와 ViewSet으로 리팩토링해 본다.
+
+우선 UserList와 UserDetail view를 단일 UserViewSet으로 리팩토링해 본다. 두 개의 view를 제거하고, 그것들을 하나의 클래스로 바꿀 수 있다:
+
+```python
+from rest_framework import viewsets
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    This viewset automatically provides `list` and `retrieve` actions.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+```
+
+여기서 ReadOnlyModelViewSet 클래스를 사용하여 기본 '읽기 전용' 작업을 자동으로 제공한다. 여전히 일반 view를 사용할 때와 똑같이 queryset과 serializer_class 속성을 설정하고 있지만, 더 이상 두 개의 개별 클래스에 동일한 정보를 제공할 필요가 없다.
+
+다음으로 SnippetList, SnippetDetail 및 SnippetHighlight 보기 클래스를 대체할 것이다. 우리는 세 개의 view를 제거하고, 다시 하나의 클래스로 바꿀 수 있다.
+
+```python
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import permissions
+
+class SnippetViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+
+    Additionally we also provide an extra `highlight` action.
+    """
+    queryset = Snippet.objects.all()
+    serializer_class = SnippetSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly,
+                          IsOwnerOrReadOnly]
+
+    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    def highlight(self, request, *args, **kwargs):
+        snippet = self.get_object()
+        return Response(snippet.highlighted)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+```
+
+이번에는 기본 읽기 및 쓰기 작업의 전체 세트를 얻기 위해 ModelViewSet 클래스를 사용했다.
+
+또한 highlight라는 이름의 사용자 지정 작업을 만들기 위해 @action 데코레이터를 사용했다는 것을 주목한다. 이 데코레이터는 표준 생성/업데이트/삭제 스타일에 맞지 않는 사용자 지정 엔드포인트를 추가하는 데 사용할 수 있다.
+
+@Action 데코레이터를 사용하는 사용자 지정 작업은 기본적으로 GET 요청에 응답한다. POST 요청에 응답하는 작업을 원한다면 메소드 인수를 사용할 수 있다.
+
+기본적으로 사용자 지정 작업의 URL은 메소드 이름 자체에 따라 다르다. URL을 구성하는 방식을 변경하려면, url_path를 데코레이터 키워드 인수로 포함할 수 있다.
+
+### 뷰셋을 URL에 명시적으로 바인딩하기
+
+핸들러 메서드는 URLConf를 정의할 때만 작업에 바인딩됩니다. 후드 아래에서 무슨 일이 일어나고 있는지 보려면 먼저 ViewSets에서 뷰 세트를 명시적으로 만들어 봅시다.
+
+snippets/urls.py 파일에서 우리는 ViewSet 클래스를 구체적인 view 세트로 바인딩한다.
+
+```python
+from snippets.views import SnippetViewSet, UserViewSet, api_root
+from rest_framework import renderers
+
+snippet_list = SnippetViewSet.as_view({
+    'get': 'list',
+    'post': 'create'
+})
+snippet_detail = SnippetViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy'
+})
+snippet_highlight = SnippetViewSet.as_view({
+    'get': 'highlight'
+}, renderer_classes=[renderers.StaticHTMLRenderer])
+user_list = UserViewSet.as_view({
+    'get': 'list'
+})
+user_detail = UserViewSet.as_view({
+    'get': 'retrieve'
+})
+```
+
+Http 메소드를 각 view에 필요한 작업에 바인딩하여 각 ViewSet 클래스에서 여러 뷰를 만드는 방법에 주목한다.
+
+이제 자원을 구체적인 뷰로 묶었으므로, 평소와 같이 URL conf로 뷰를 등록할 수 있다.
+
+```python
+urlpatterns = format_suffix_patterns([
+    path('', api_root),
+    path('snippets/', snippet_list, name='snippet-list'),
+    path('snippets/<int:pk>/', snippet_detail, name='snippet-detail'),
+    path('snippets/<int:pk>/highlight/', snippet_highlight, name='snippet-highlight'),
+    path('users/', user_list, name='user-list'),
+    path('users/<int:pk>/', user_detail, name='user-detail')
+])
+```
+
+### 라우터 사용하기
+
+View 클래스가 아닌 ViewSet 클래스를 사용하고 있기 때문에, 실제로 URL conf를 직접 디자인할 필요가 없다. 
+리소스를 뷰와 URL로 연결하는 규칙은 라우터 클래스를 사용하여 자동으로 처리할 수 있다. 
+해야 할 일은 라우터에 적절한 뷰 세트를 등록하고, 나머지는 하도록 하는 것이다.
+
+여기 다시 배선된 스니펫/urls.py 파일이 있다.
+```python
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from snippets import views
+
+# Create a router and register our viewsets with it.
+router = DefaultRouter()
+router.register(r'snippets', views.SnippetViewSet,basename="snippet")
+router.register(r'users', views.UserViewSet,basename="user")
+
+# The API URLs are now determined automatically by the router.
+urlpatterns = [
+    path('', include(router.urls)),
+]
+```
+
+라우터에 viewsets을 등록하는 것은 URL패턴을 제공하는 것과 비슷하다. 우리는 두 개의 인수를 포함한다 - 뷰의 URL 접두사와 뷰셋 자체.
+
+사용하고 있는 DefaultRouter 클래스는 자동으로 API 루트 뷰를 생성하므로, 이제 뷰 모듈에서 api_root 메소드를 삭제할 수 있다.
+
+### 뷰와 뷰셋 간의 절충
+
+뷰셋을 사용하는 것은 정말 유용한 추상화가 될 수 있다. URL 규칙이 API에서 일관성을 유지하고, 작성해야 하는 코드의 양을 최소화하며, URL conf의 세부 사항보다는 API가 제공하는 상호 작용과 표현에 집중할 수 있도록 도와준다.
+
+그것이 항상 올바른 접근 방식이라는 것을 의미하지는 않는다. 
+함수 기반 뷰 대신 클래스 기반 뷰를 사용할 때 고려해야 할 비슷한 절충안 세트가 있다. 
+뷰셋을 사용하는 것은 개별적으로 뷰를 구축하는 것보다 덜 노골적이다.
