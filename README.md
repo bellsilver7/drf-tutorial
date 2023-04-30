@@ -171,6 +171,75 @@ class SnippetSerializer(serializers.Serializer):
 나중에 ModelSerializer 클래스를 사용하여 시간을 절약할 수 있지만, 지금은 serializer 정의를 명시적으로 유지한다.
 
 ### 시리얼라이저 동작
+
+더 나아가기 전에 새로운 Serializer 클래스를 사용하는 것에 익숙해질 것이다. 장고 쉘에 들어간다.
+
+```shell
+python manage.py shell
+```
+
+일단 몇 가지 import를 하고 작업할 몇 가지 코드 스니펫을 만든다.
+
+```python
+from snippets.models import Snippet
+from snippets.serializers import SnippetSerializer
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
+
+snippet = Snippet(code='foo = "bar"\n')
+snippet.save()
+
+snippet = Snippet(code='print("hello, world")\n')
+snippet.save()
+```
+
+이제 몇 가지 스니펫 인스턴스가 있다. 그 중 하나를 살펴보자.
+
+```python
+serializer = SnippetSerializer(snippet)
+serializer.data
+# {'id': 2, 'title': '', 'code': 'print("hello, world")\n', 'linenos': False, 'language': 'python', 'style': 'friendly'}
+```
+
+이 시점에서 모델 인스턴스를 파이썬 네이티브 데이터 유형으로 번역했다. 직렬화 프로세스를 마무리하기 위해 데이터를 json으로 렌더링한다.
+
+```python
+content = JSONRenderer().render(serializer.data)
+content
+# b'{"id": 2, "title": "", "code": "print(\\"hello, world\\")\\n", "linenos": false, "language": "python", "style": "friendly"}'
+```
+
+역직렬화는 비슷하다. 먼저 우리는 스트림을 파이썬 네이티브 데이터 유형으로 구문 분석한다...
+
+```python
+import io
+
+stream = io.BytesIO(content)
+data = JSONParser().parse(stream)
+```
+
+...그런 다음 우리는 그 네이티브 데이터 유형을 완전히 채워진 객체 인스턴스로 복원한다.
+
+```python
+serializer = SnippetSerializer(data=data)
+serializer.is_valid()
+# True
+serializer.validated_data
+# OrderedDict([('title', ''), ('code', 'print("hello, world")\n'), ('linenos', False), ('language', 'python'), ('style', 'friendly')])
+serializer.save()
+# <Snippet: Snippet object>
+```
+
+API가 양식 작업과 얼마나 유사한지 주목해본다. 시리얼라이저를 사용하는 뷰를 쓰기 시작할 때 유사성은 훨씬 더 분명해질 것이다.
+
+모델 인스턴스 대신 querysets를 직렬화할 수도 있다. 그렇게 하기 위해 우리는 단순히 serializer 인수에 many=True 플래그를 추가한다.
+
+```python
+serializer = SnippetSerializer(Snippet.objects.all(), many=True)
+serializer.data
+# [OrderedDict([('id', 1), ('title', ''), ('code', 'foo = "bar"\n'), ('linenos', False), ('language', 'python'), ('style', 'friendly')]), OrderedDict([('id', 2), ('title', ''), ('code', 'print("hello, world")\n'), ('linenos', False), ('language', 'python'), ('style', 'friendly')]), OrderedDict([('id', 3), ('title', ''), ('code', 'print("hello, world")'), ('linenos', False), ('language', 'python'), ('style', 'friendly')])]
+```
+
 ### 모델 시리얼라이저 사용하기
 ### 시리얼라이저를 사용해 일반 장고 뷰 작성하기
 ### 웹 API에 대한 첫 테스트
