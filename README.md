@@ -40,15 +40,33 @@
 
 ### 소개
 
-이 튜토리얼은 붙여넣기 코드를 강조하는 간단한 웹 API에 대해 설명합니다. 이 과정에서 REST 프레임워크를 구성하는 다양한 구성 요소를 소개하고 모든 구성 요소가 어떻게 결합되는지에 대한 포괄적인 이해를 제공합니다.
+이 튜토리얼은 붙여넣기 코드를 강조하는 간단한 웹 API에 대해 설명한다. 이 과정에서 REST 프레임워크를 구성하는 다양한 구성 요소를 소개하고 모든 구성 요소가 어떻게 결합되는지에 대한 포괄적인 이해를 제공한다.
 
-이 튜토리얼은 상당히 깊이가 있기 때문에 시작하기 전에 쿠키와 좋아하는 양주 한 잔을 준비해야 할 것입니다. 간단한 개요만 원하는 경우에는 빠른 시작 설명서로 넘어가야 합니다.
+이 튜토리얼은 상당히 깊이가 있기 때문에 시작하기 전에 쿠키와 좋아하는 양주 한 잔을 준비해야 할 것입니다. 간단한 개요만 원하는 경우에는 빠른 시작 설명서로 넘어가야 한다.
 
-'''
-참고: 이 튜토리얼의 코드는 GitHub의 [encode/rest-framework-tutorial](https://github.com/encode/rest-framework-tutorial) 저장소에서 사용할 수 있습니다. 완료된 구현은 테스트를 위한 샌드박스 버전으로도 온라인 상태이며, [여기](https://restframework.herokuapp.com/)에서 이용할 수 있습니다.
-'''
+```
+참고: 이 튜토리얼의 코드는 GitHub의 [encode/rest-framework-tutorial](https://github.com/encode/rest-framework-tutorial) 저장소에서 사용할 수 있다. 완료된 구현은 테스트를 위한 샌드박스 버전으로도 온라인 상태이며, [여기](https://restframework.herokuapp.com/)에서 이용할 수 있다.
+```
 
 ### 새로운 환경설정
+
+먼저 venv를 사용해 새로운 가상 환경을 만든다. 이것은 우리의 패키지 구성이 우리가 작업하고 있는 다른 프로젝트와 잘 분리되도록 한다.
+
+```shell
+python3 -m venv env
+source env/bin/activate
+```
+
+이제 가상 환경 안에 있기 때문에, 패키지 요구 사항을 설치할 수 있습니다.
+
+```shell
+pip install django
+pip install djangorestframework
+pip install pygments  # We'll be using this for the code highlighting
+```
+
+참고: 언제든지 가상 환경을 종료하려면, 비활성화를 입력하십시오. 자세한 내용은 [venv 문서](https://docs.python.org/3/library/venv.html)를 참조하십시오.
+
 ### 시작하기
 ### 작업할 모델 만들기
 ### 시리얼라이저 클래스 만들기
