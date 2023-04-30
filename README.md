@@ -44,9 +44,7 @@
 
 이 튜토리얼은 상당히 깊이가 있기 때문에 시작하기 전에 쿠키와 좋아하는 양주 한 잔을 준비해야 할 것입니다. 간단한 개요만 원하는 경우에는 빠른 시작 설명서로 넘어가야 한다.
 
-```
 참고: 이 튜토리얼의 코드는 GitHub의 [encode/rest-framework-tutorial](https://github.com/encode/rest-framework-tutorial) 저장소에서 사용할 수 있다. 완료된 구현은 테스트를 위한 샌드박스 버전으로도 온라인 상태이며, [여기](https://restframework.herokuapp.com/)에서 이용할 수 있다.
-```
 
 ### 새로운 환경설정
 
@@ -68,6 +66,31 @@ pip install pygments  # We'll be using this for the code highlighting
 참고: 언제든지 가상 환경을 종료하려면, 비활성화를 입력하십시오. 자세한 내용은 [venv 문서](https://docs.python.org/3/library/venv.html)를 참조하십시오.
 
 ### 시작하기
+
+작업할 새로운 프로젝트를 만든다.
+
+```shell
+cd ~
+django-admin startproject tutorial
+cd tutorial
+```
+
+완료되면 간단한 웹 API를 만드는 데 사용할 앱을 만들 수 있다.
+
+```shell
+python manage.py startapp snippets
+```
+
+새로운 스니펫 앱과 rest_framework 앱을 INSTALLED_APPS에 추가해야 합니다. Tutorial/settings.py 파일을 편집한다:
+
+```python
+INSTALLED_APPS = [
+    ...
+    'rest_framework',
+    'snippets',
+]
+```
+
 ### 작업할 모델 만들기
 ### 시리얼라이저 클래스 만들기
 ### 시리얼라이저 동작
