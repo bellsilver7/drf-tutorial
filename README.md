@@ -92,6 +92,40 @@ INSTALLED_APPS = [
 ```
 
 ### 작업할 모델 만들기
+
+이 튜토리얼의 목적을 위해 우리는 코드 스니펫을 저장하는 데 사용되는 간단한 Snippet 모델을 만드는 것으로 시작한다. snippets/models.py 파일을 편집한다.
+
+참고: 좋은 프로그래밍 관행에는 의견이 포함된다. 이 튜토리얼 코드의 저장소 버전에서 찾을 수 있지만, 코드 자체에 초점을 맞추기 위해 생략.
+
+```python
+from django.db import models
+from pygments.lexers import get_all_lexers
+from pygments.styles import get_all_styles
+
+LEXERS = [item for item in get_all_lexers() if item[1]]
+LANGUAGE_CHOICES = sorted([(item[1][0], item[0]) for item in LEXERS])
+STYLE_CHOICES = sorted([(item, item) for item in get_all_styles()])
+
+
+class Snippet(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    title = models.CharField(max_length=100, blank=True, default='')
+    code = models.TextField()
+    linenos = models.BooleanField(default=False)
+    language = models.CharField(choices=LANGUAGE_CHOICES, default='python', max_length=100)
+    style = models.CharField(choices=STYLE_CHOICES, default='friendly', max_length=100)
+
+    class Meta:
+        ordering = ['created']
+```
+
+우리는 또한 스니펫 모델에 대한 초기 마이그레이션을 만들고 처음으로 데이터베이스를 동기화해야 할 것이다.
+
+```python
+python manage.py makemigrations snippets
+python manage.py migrate snippets
+```
+
 ### 시리얼라이저 클래스 만들기
 ### 시리얼라이저 동작
 ### 모델 시리얼라이저 사용하기
