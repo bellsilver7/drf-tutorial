@@ -127,6 +127,49 @@ python manage.py migrate snippets
 ```
 
 ### 시리얼라이저 클래스 만들기
+
+웹 API를 시작하기 위해 가장 먼저 해야 할 일은 스니펫 인스턴스를 json과 같은 표현으로 직렬화하고 역직렬화하는 방법을 제공하는 것이다. 장고의 양식과 매우 유사하게 작동하는 시리얼라이저를 선언함으로써 이것을 할 수 있다. Serializers.py라는 이름의 스니펫 디렉토리에 파일을 만들고 다음을 추가한다.
+
+```python
+from rest_framework import serializers
+from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
+
+
+class SnippetSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    title = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    code = serializers.CharField(style={'base_template': 'textarea.html'})
+    linenos = serializers.BooleanField(required=False)
+    language = serializers.ChoiceField(choices=LANGUAGE_CHOICES, default='python')
+    style = serializers.ChoiceField(choices=STYLE_CHOICES, default='friendly')
+
+    def create(self, validated_data):
+        """
+        Create and return a new `Snippet` instance, given the validated data.
+        """
+        return Snippet.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        Update and return an existing `Snippet` instance, given the validated data.
+        """
+        instance.title = validated_data.get('title', instance.title)
+        instance.code = validated_data.get('code', instance.code)
+        instance.linenos = validated_data.get('linenos', instance.linenos)
+        instance.language = validated_data.get('language', instance.language)
+        instance.style = validated_data.get('style', instance.style)
+        instance.save()
+        return instance
+```
+
+시리얼라이저 클래스의 첫 번째 부분은 직렬화/비직렬화되는 필드를 정의한다. Create() 및 update() 메서드는 serializer.save()를 호출할 때 본격적인 인스턴스가 생성되거나 수정되는 방법을 정의한다.
+
+시리얼라이저 클래스는 Django Form 클래스와 매우 유사하며, 필수, max_length 및 기본값과 같은 다양한 필드에 유사한 유효성 검사 플래그를 포함한다.
+
+필드 플래그는 또한 HTML로 렌더링할 때와 같은 특정 상황에서 시리얼라이저를 표시하는 방법을 제어할 수 있다. 위의 {'base_template': 'textarea.html'} 플래그는 Django Form 클래스에서 widget=widgets.Textarea를 사용하는 것과 같다. 이것은 튜토리얼의 뒷부분에서 볼 수 있듯이, browsable API가 어떻게 표시되어야 하는지 제어하는 데 특히 유용하다.
+
+나중에 ModelSerializer 클래스를 사용하여 시간을 절약할 수 있지만, 지금은 serializer 정의를 명시적으로 유지한다.
+
 ### 시리얼라이저 동작
 ### 모델 시리얼라이저 사용하기
 ### 시리얼라이저를 사용해 일반 장고 뷰 작성하기
